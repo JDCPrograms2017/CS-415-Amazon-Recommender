@@ -20,7 +20,7 @@ with open(filename, encoding="utf-8") as fp:
             document_count += 1
 
             if document_count == document_limit:
-                break # This helps us limit the output data to 200,000 entries. We really don't need 1 million products here, haha.
+                break # This helps us limit the output data to 200,000 entries. We really don't need 1/2 million products here, haha.
         
         elif description[0] == 'Id':
             current_ID = description[1].strip() # It's necessary to set current_ID first so that we can know when to proceed to the next Document.
