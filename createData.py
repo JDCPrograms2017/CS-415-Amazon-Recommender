@@ -24,8 +24,6 @@ with open(filename, encoding="utf-8") as fp:
         
         elif description[0] == 'Id':
             current_ID = description[1].strip() # It's necessary to set current_ID first so that we can know when to proceed to the next Document.
-        elif description[0] == 'title':
-            dict2["title"] = description[1].strip()
         elif description[0] == 'categories':
             num = int(description[1])
             cate = [description[1].strip()]
