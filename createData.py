@@ -1,50 +1,52 @@
 import json
 
-filename = "amazon-meta.txt"
-out = open("amazon.json", "w")
+filename = "./amazon-meta.txt"
+out = open("amazon.json", "w", encoding="utf-8")
 
-list1 = []
+products = {} # Establish a dictionary that will hold each product Document. This dictionary is the Collection of those Documents.
 fields = ['ASIN', 'title', 'group', 'salesrank', 'similar']
-l = 0
 dict2 = {}
-with open(filename) as fp:
+current_ID = None # Establish a temporary variable to save the current ID of each product to make as the Document ID.
+document_count = 0
+document_limit = 200000
+with open(filename, encoding="utf-8") as fp:
     for line in fp:
         description = list(line.strip().split(":", 1))
         if description[0] == "":
-            list1.append(dict2)
-            #json.dump(dict2, out, indent = 4, sort_keys = False)
-            #dict1[l] = dict2
+            if current_ID: # If the current ID is identified for the product.
+                products[f"{current_ID}"] = dict2
             dict2 = {}
+            current_ID = None
+            document_count += 1
+
+            if document_count == document_limit:
+                break # This helps us limit the output data to 200,000 entries. We really don't need 1 million products here, haha.
+        
         elif description[0] == 'Id':
-            dict2["Id"] = description[1].strip()
-            #l = description[1].strip()
-            continue
+            current_ID = description[1].strip() # It's necessary to set current_ID first so that we can know when to proceed to the next Document.
+        elif description[0] == 'title':
+            dict2["title"] = description[1].strip()
         elif description[0] == 'categories':
             num = int(description[1])
-            x = 0
-            cate = []
-            cate.append(description[1].strip())
-            while x < num:
+            cate = [description[1].strip()]
+            for _ in range(num):
                 cate.append(fp.readline().strip())
-                x += 1
             dict2['categories'] = cate
         elif description[0] == 'reviews':
             items = list(description[1].split(None, 3))
             num = int(items[1])
-            x = 0
-            rev = []
-            rev.append(description[1].strip())
-            while x < num:
+            rev = [description[1].strip()]
+            for _ in range(num):
                 rev.append(fp.readline().strip())
-                x += 1
             dict2['reviews'] = rev
-        i = 0
-        while i < len(fields):
-            if description[0] == fields[i]:
-                dict2[fields[i]] = description[1].strip()
-            i = i + 1
+        
+        for field in fields:
+            if description[0] == field:
+                dict2[field] = description[1].strip()
 
-json.dump(list1, out, indent = 4, sort_keys = False)
+# Wrapping our dictonary of products with their ID in a Collection titled "products"
+final_dict = {"products": products}
+json.dump(final_dict, out, indent = 4, sort_keys = False)
 out.close()
 
 # Full information about Amazon Share the Love products
