@@ -3,6 +3,11 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# Other Files and Directories That I've Specified:
+CS415/
+datasets/
+
+
 # User-specific files
 *.rsuser
 *.suo
