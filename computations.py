@@ -12,7 +12,7 @@ spark = SparkSession.builder.appName("AmazonRecommender") \
 df = spark.read.format("mongodb").load()
 df.show()
 
-def helper(line):
+def identifyRelated(line):
     #check if the current item is the item we are selecting to find similar items for
     
     #grab line of "similar"
