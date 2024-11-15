@@ -29,6 +29,8 @@ def identifyRelated(line):
     #put the contents in a list
     index = 0
     similarItems = []
+    if limit > 5:
+      limit = 5
     while index < limit:
         for i in df:
             if i.ASIN == items[index]:
@@ -38,11 +40,11 @@ def identifyRelated(line):
     #return the list
     return similarItems
 
-def findSimilarItems():
+'''def findSimilarItems():
     df.printSchema()
     #df.foreach(helper)
     #df.show(10)
     return
 
 if __name__ == "__main__":
-    findSimilarItems()
+    findSimilarItems()'''
