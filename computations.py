@@ -59,7 +59,7 @@ def queryMatchingItems(query, category=None):
     filtered_tokenized_df = exploded_tokens.filter(filter_condition)
 
     # Regroup the filtered dataframe    
-    filtered_tokenized_df = filtered_tokenized_df.groupBy("Title", *[col for col in df.columns if col != "tokenized_title"]).agg(f.collect_set("token").alias("matching_tokens"))
+    filtered_tokenized_df = filtered_tokenized_df.groupBy("Title", "ASIN").agg(f.collect_set("token").alias("matching_tokens"))
     
     # Applying a new column with the matching tokens
     filtered_tokenized_df = filtered_tokenized_df.filter(f.size(f.col("matching_tokens")) > 2) # Setting some arbitrary value for token count. (I made it so that we need to find 2 or more related tokens to display the item)
@@ -71,8 +71,10 @@ def queryMatchingItems(query, category=None):
     filtered_tokenized_df = filtered_tokenized_df.withColumn("token_match_count", f.size(f.col("matching_tokens")))
     filtered_tokenized_df = filtered_tokenized_df.orderBy(f.col("token_match_count").desc()) # Sort by descending order (So we can start with the highest number of matching tokens)
 
+    filtered_tokenized_df.dropDuplicates(["Title"])
+    filtered_tokenized_df.limit(10).show()
     # TODO: Format the n number of matching items for the query and return the data in a way that's fitting for the application. (Or return nothing if a query fails to find matching items.)
-    return filtered_tokenized_df
+    return 
 
 '''def findSimilarItems():
     df.printSchema()

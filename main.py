@@ -20,7 +20,8 @@ def main():
         user_category = input("\nWhat category does it belong to?\n")
         
         item = com.queryMatchingItems(user_query, user_category)
-        item.show()
+        #for product in item:
+        #    print(product)
         #similar = com.identifyRelated(item)
         #myoutput(similar)
     
