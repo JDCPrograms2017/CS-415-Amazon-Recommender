@@ -1,8 +1,8 @@
 import re
-import pyspark
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SparkSession, SQLContext, functions as f
 from pyspark.sql.functions import *
+from functools import reduce
 
 spark = SparkSession.builder.appName("AmazonRecommender") \
                     .config("spark.jars.packages", "org.mongodb.spark:mongo-spark-connector_2.12:10.4.0") \
@@ -55,19 +55,18 @@ def queryMatchingItems(query, category=None):
 
     # Filter out the tokens based on the given condition
     conditions = [f.col("token").contains(f'{token}') for token in cleansed_query]
-    filter_condition = f.reduce(lambda x, y: x | y, conditions)
-    filtered_tokenized_df = exploded_tokens.filter(filter_condition)\
+    filter_condition = reduce(lambda x, y: x | y, conditions)
+    filtered_tokenized_df = exploded_tokens.filter(filter_condition)
 
     # Regroup the filtered dataframe    
-    filtered_tokenized_df = filtered_tokenized_df.groupBy("Title").agg(f.collect_set("token").alias("matching_tokens"))
+    filtered_tokenized_df = filtered_tokenized_df.groupBy("Title", *[col for col in df.columns if col != "tokenized_title"]).agg(f.collect_set("token").alias("matching_tokens"))
     
     # Applying a new column with the matching tokens
-    filtered_tokenized_df = filtered_tokenized_df.withColumn("matching_tokens", f.array_intersect(f.col("tokenized_title"), f.array(*[f.lit(tok) for tok in query_broadcast.value])))
     filtered_tokenized_df = filtered_tokenized_df.filter(f.size(f.col("matching_tokens")) > 2) # Setting some arbitrary value for token count. (I made it so that we need to find 2 or more related tokens to display the item)
     
     # If we specify a category, then we should filter based on the category too.
-    if category:
-        filtered_tokenized_df = filtered_tokenized_df.filter(f.col("category") == category)
+    #if category:
+    #    filtered_tokenized_df = filtered_tokenized_df.filter(f.col("category") == category)
     
     filtered_tokenized_df = filtered_tokenized_df.withColumn("token_match_count", f.size(f.col("matching_tokens")))
     filtered_tokenized_df = filtered_tokenized_df.orderBy(f.col("token_match_count").desc()) # Sort by descending order (So we can start with the highest number of matching tokens)

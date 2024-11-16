@@ -1,4 +1,4 @@
-#import computations as com
+import computations as com
 
 def menu():
     print("\nSelect an item\n")
@@ -15,8 +15,12 @@ def main():
         elif int(selection) == 2:
             print("Quitting\n")
             break
+
+        user_query = input("What item are you looking for?\n")
+        user_category = input("\nWhat category does it belong to?\n")
         
-        #item = myinput()
+        item = com.queryMatchingItems(user_query, user_category)
+        item.show()
         #similar = com.identifyRelated(item)
         #myoutput(similar)
     
