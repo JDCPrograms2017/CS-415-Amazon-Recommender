@@ -11,6 +11,7 @@ spark = SparkSession.builder.appName("AmazonRecommender") \
                     .config("spark.mongodb.read.collection", "Products") \
                     .getOrCreate()
 df = spark.read.format("mongodb").load()
+df = df.dropDuplicates(["Title"])
 df.show()
 
 def identifyRelated(line):
@@ -43,11 +44,9 @@ def identifyRelated(line):
 
 def queryMatchingItems(query, category=None):
     tokenized_query = query.split()
-    cleansed_query = [re.sub(r'[^a-zA-Z0-9]', '', tok) for tok in tokenized_query] # Using a broad pattern to remove non alpha-numeric characters from the query
+    cleansed_query = [re.sub(r'[^a-zA-Z0-9]', '', tok).lower() for tok in tokenized_query] # Using a broad pattern to remove non alpha-numeric characters from the query
 
-    # There is now the necessity to broadcast the tokens to all Spark nodes for efficient computation:
-    query_broadcast = spark.sparkContext.broadcast(cleansed_query) # Broadcasting query tokens to the Spark nodes. (Since this project is local, there's only one node but whatevah.)
-    tokenized_df = df.withColumn("tokenized_title", f.split(f.col("Title"), "\\s+")) # Making a tokenized version of the dataframe
+    tokenized_df = df.withColumn("tokenized_title", f.split(lower(f.col("Title")), "\\s+")) # Making a tokenized version of the dataframe and making the tokens lowercase (to remove case sensitivity)
     
     # Exploding the tokenized titles so that we can process each token and identify matching substrings.
     columns_to_preserve = [col for col in tokenized_df.columns if col != "tokenized_title"]
@@ -59,22 +58,31 @@ def queryMatchingItems(query, category=None):
     filtered_tokenized_df = exploded_tokens.filter(filter_condition)
 
     # Regroup the filtered dataframe    
-    filtered_tokenized_df = filtered_tokenized_df.groupBy("Title", "ASIN").agg(f.collect_set("token").alias("matching_tokens"))
+    filtered_tokenized_df = filtered_tokenized_df.groupBy("Title", "ASIN", "categories").agg(f.collect_set("token").alias("matching_tokens"))
     
     # Applying a new column with the matching tokens
-    filtered_tokenized_df = filtered_tokenized_df.filter(f.size(f.col("matching_tokens")) > 2) # Setting some arbitrary value for token count. (I made it so that we need to find 2 or more related tokens to display the item)
+    min_tokens = (lambda x, y: x if x < y else y)(3, len(cleansed_query)) # Identifying the minimum number of tokens needed to match with a product.
+    filtered_tokenized_df = filtered_tokenized_df.filter(f.size(f.col("matching_tokens")) > min_tokens) # Limiting the minimum required number of tokens to be identified to match.
     
+    # Defining a function within the scope of this function to filter by categories if need be.
+    def match_categories(categories):
+        parsed_categories = [entry.split('[')[0] for entry in categories if entry]
+        matched_cats = set(parsed_categories) & set(category)
+        return list(matched_cats)
+
     # If we specify a category, then we should filter based on the category too.
-    #if category:
-    #    filtered_tokenized_df = filtered_tokenized_df.filter(f.col("category") == category)
+    if category:
+        cat_match_udf = f.udf(match_categories, returnType=ArrayType(StringType()))
+        filtered_tokenized_df = filtered_tokenized_df.withColumn("Matching Categories", cat_match_udf(f.col("categories")))
+        filtered_tokenized_df = filtered_tokenized_df.filter(f.size(f.col("Matching Categories")) > 0)
     
     filtered_tokenized_df = filtered_tokenized_df.withColumn("token_match_count", f.size(f.col("matching_tokens")))
     filtered_tokenized_df = filtered_tokenized_df.orderBy(f.col("token_match_count").desc()) # Sort by descending order (So we can start with the highest number of matching tokens)
 
-    filtered_tokenized_df.dropDuplicates(["Title"])
     filtered_tokenized_df.limit(10).show()
     # TODO: Format the n number of matching items for the query and return the data in a way that's fitting for the application. (Or return nothing if a query fails to find matching items.)
-    return 
+    return
+
 
 '''def findSimilarItems():
     df.printSchema()
