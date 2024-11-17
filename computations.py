@@ -21,7 +21,7 @@ def identifyRelated(line):
     #grab line of "similar"
 
     #get first item which is number of items
-    (limit, items) = line.similar.split(" ", 1)
+    (limit, items) = line['similar'].split(" ", 1)
     #limit is the first item
 
     #iterate through the rest of the string until the limit is hit
@@ -36,7 +36,7 @@ def identifyRelated(line):
       limit = 5
     while index < limit:
         for i in df:
-            if i.ASIN == items[index]:
+            if i['ASIN'] == items[index]:
                 similarItems.append(i)
         index += 1
 
