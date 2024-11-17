@@ -3,6 +3,7 @@ from pyspark import SparkContext, SparkConf
 from pyspark.sql import SparkSession, SQLContext, functions as f
 from pyspark.sql.functions import *
 from functools import reduce
+import json
 
 spark = SparkSession.builder.appName("AmazonRecommender") \
                     .config("spark.jars.packages", "org.mongodb.spark:mongo-spark-connector_2.12:10.4.0") \
@@ -79,10 +80,24 @@ def queryMatchingItems(query, category=None):
     filtered_tokenized_df = filtered_tokenized_df.withColumn("token_match_count", f.size(f.col("matching_tokens")))
     filtered_tokenized_df = filtered_tokenized_df.orderBy(f.col("token_match_count").desc()) # Sort by descending order (So we can start with the highest number of matching tokens)
 
-    filtered_tokenized_df.limit(10).show()
-    # TODO: Format the n number of matching items for the query and return the data in a way that's fitting for the application. (Or return nothing if a query fails to find matching items.)
-    return
+    filtered_tokenized_df = filtered_tokenized_df.limit(10) # Reducing to the top 10 results
+    
+    # We are going to take the matching products and return their JSON representations to be displayed to the webpage.
+    resulting_ASINs = [row['ASIN'] for row in filtered_tokenized_df.select('ASIN').collect()] # Creating a list of ASINs for the matching products.
+    return fetch_products(resulting_ASINs)
 
+# Helper function to fetch the full product(s) and their information and return the info as JSON data.
+def fetch_products(product_identifiers):
+    condition = f.col('ASIN').isin(product_identifiers) # Creating the condition for identifying the rows.
+    resulting_rows = df.filter(condition)
+
+    resulting_rows = resulting_rows.collect() # Collecting the DataFrame rows in to a list of Row objects.
+
+    # Converting the results to json data
+    json_results = [row.asDict() for row in resulting_rows] # When we make rows into dictionaries, we can easily convert those dictionaries into JSON data.
+    json_final_dump = json.dumps(json_results, indent=4)
+
+    return json_final_dump # Return the resulting json data
 
 '''def findSimilarItems():
     df.printSchema()
