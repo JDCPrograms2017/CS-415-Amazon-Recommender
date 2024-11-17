@@ -13,6 +13,27 @@ spark = SparkSession.builder.appName("AmazonRecommender") \
 df = spark.read.format("mongodb").load()
 df.show()
 
+def myinput(searchQuery):
+    while (1):
+        #output the data
+        j = 1
+        for line in searchQuery:
+            print(j + line.Title)
+            j += 1
+
+        #ask user for what they selected
+        selection = input("What would you like to select?\n")
+        
+        #verify selection is accurate
+        count = searchQuery.count()
+        if int(selection) > count or int(selection) < 1:
+            print("Error in selection. Please enter another number\n")
+            continue
+        #get that input and put the data into a storage
+        for i in df:
+            if i.ASIN == searchQuery[selection - 1].ASIN:
+                return i
+
 def identifyRelated(line):
     #check if the current item is the item we are selecting to find similar items for
     
@@ -74,13 +95,5 @@ def queryMatchingItems(query, category=None):
     filtered_tokenized_df.dropDuplicates(["Title"])
     filtered_tokenized_df.limit(10).show()
     # TODO: Format the n number of matching items for the query and return the data in a way that's fitting for the application. (Or return nothing if a query fails to find matching items.)
-    return 
-
-'''def findSimilarItems():
-    df.printSchema()
-    #df.foreach(helper)
-    #df.show(10)
-    return
-
-if __name__ == "__main__":
-    findSimilarItems()'''
+    
+    return myinput(filtered_tokenized_df)
