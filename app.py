@@ -2,7 +2,7 @@
 # and setus up a /search endpoint that takes query and category into a POST request, searches the db and 
 # returns matching products
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from pymongo import MongoClient
 
 app=Flask(__name__)
@@ -12,7 +12,7 @@ products_collection=db['Products']
 
 @app.route('/')
 def home():
-    return "Hello, Flask!"
+    return render_template("search.html")
 
 
 @app.route('/search', methods=['POST'])
