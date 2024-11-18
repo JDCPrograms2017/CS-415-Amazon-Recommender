@@ -24,21 +24,28 @@ def identifyRelated(line):
     (limit, items) = line['similar'].split(" ", 1)
     #limit is the first item
 
+    #check limit
+    if int(limit) > 5:
+      limit = 5
+
     #iterate through the rest of the string until the limit is hit
     #want to use split to split through each tab
-    items = items.split(" ", limit)
+    items = items.split(" ")
 
     #for each item, search for the ASIN in the entire database
     #put the contents in a list
     index = 0
     similarItems = []
-    if limit > 5:
-      limit = 5
     while index < limit:
-        for i in df:
-            if i['ASIN'] == items[index]:
-                similarItems.append(i)
+        next_item = df.filter(df['ASIN'] == items[index]).collect()
+        if next_item:
+            similarItems.append(next_item[0])
         index += 1
+    # while index < limit:
+    #     for i in df:
+    #         if i['ASIN'] == items[index]:
+    #             similarItems.append(i)
+    #     index += 1
 
     #return the list
     return similarItems
@@ -98,12 +105,3 @@ def fetch_products(product_identifiers):
     json_final_dump = json.dumps(json_results, indent=4)
 
     return json_final_dump # Return the resulting json data
-
-'''def findSimilarItems():
-    df.printSchema()
-    #df.foreach(helper)
-    #df.show(10)
-    return
-
-if __name__ == "__main__":
-    findSimilarItems()'''
