@@ -14,25 +14,41 @@ spark = SparkSession.builder.appName("AmazonRecommender") \
 df = spark.read.format("mongodb").load()
 # df.show()
 
+def myinput(searchQuery):
+    while (1):
+        #output the data
+        j = 1
+        for line in searchQuery:
+            print(line)
+            j += 1
+
+        #ask user for what they selected
+        selection = input("What would you like to select?\n")
+        
+        #verify selection is accurate
+        count = len(searchQuery)
+        if int(selection) > count or int(selection) < 1:
+            print("Error in selection. Please enter another number\n")
+            continue
+        #get that input and put the data into a storage
+        return fetch_products(searchQuery[selection - 1])
+
+def myoutput(similarItems):
+    #similarItems is the list of similar items
+    for i in similarItems:
+        print("Title: " + i['Title'])
+        print("Salesrank: " + i['salesrank'])
+        print("Reviews: " + i['reviews'])
+        print()
+    return
+
 def identifyRelated(item_json):
-    #grab line of "similar"
 
-    #get first item which is number of items
-    # (limit, items) = line.similar.split(" ", 1)
-    #limit is the first item
-
-    #iterate through the rest of the string until the limit is hit
-    #want to use split to split through each tab
-    # items = items.split(" ", limit)
-
-    #for each item, search for the ASIN in the entire database
-    #put the contents in a list
+    # Grab the ASINs of the provided product.
     similar_items = item_json["similar"]
     similar_items = similar_items.split(" ")
     limit = int(similar_items[0]) # The first element in this list will be the number of similar items.
-    
-    index = 0
-    similarItems = [] # We will have 
+
     if limit > 5:
       limit = 5
     
@@ -44,26 +60,35 @@ def identifyRelated(item_json):
 def queryMatchingItems(query, category=None):
     tokenized_query = query.split()
     cleansed_query = [re.sub(r'[^a-zA-Z0-9]', '', tok).lower() for tok in tokenized_query] # Using a broad pattern to remove non alpha-numeric characters from the query
+    print("Cleansed query: ")
+    print(cleansed_query)
 
-    tokenized_df = df.withColumn("tokenized_title", f.split(lower(f.col("Title")), "\\s+")) # Making a tokenized version of the dataframe and making the tokens lowercase (to remove case sensitivity)
+    tokenized_df = df.withColumn("tokenized_title", f.split(f.lower(f.col("title")), "\\s+"))
+    # tokenized_df.limit(10).show()
+
+    conditions = f.lit(True)
+    for token in cleansed_query:
+        conditions = conditions & f.array_contains(f.col("tokenized_title"), token)
     
-    # Exploding the tokenized titles so that we can process each token and identify matching substrings.
-    columns_to_preserve = [col for col in tokenized_df.columns if col != "tokenized_title"]
-    exploded_tokens = tokenized_df.select(*columns_to_preserve, f.explode(f.col("tokenized_title")).alias("token"))
+    filtered_tokenized_df = tokenized_df.filter(conditions)
 
-    # Filter out the tokens based on the given condition
-    conditions = [f.col("token").contains(f'{token}') for token in cleansed_query]
-    filter_condition = reduce(lambda x, y: x | y, conditions)
-    filtered_tokenized_df = exploded_tokens.filter(filter_condition)
+    filtered_tokenized_df = filtered_tokenized_df.withColumn("tokenized_title", f.split(f.lower(f.col("title")), "\\s+"))
+    # filtered_tokenized_df.limit(10).show()
+    
+    # Count the number of tokens in the title that match the query tokens
+    matching_tokens_column = f.array(*[f.when(f.array_contains(f.col("tokenized_title"), token), token).otherwise(None) for token in cleansed_query])
+    
+    # Add a column for the count of matching tokens
+    filtered_tokenized_df = filtered_tokenized_df.withColumn("matching_tokens", matching_tokens_column)
+    filtered_tokenized_df = filtered_tokenized_df.withColumn("token_match_count", f.size(f.col("matching_tokens")))
 
-    # Regroup the filtered dataframe    
-    filtered_tokenized_df = filtered_tokenized_df.groupBy("Title", "ASIN", "categories").agg(f.collect_set("token").alias("matching_tokens"))
+    # filtered_tokenized_df.limit(10).show()
     
     # Applying a new column with the matching tokens
     min_tokens = (lambda x, y: x if x < y else y)(3, len(cleansed_query)) # Identifying the minimum number of tokens needed to match with a product.
     filtered_tokenized_df = filtered_tokenized_df.filter(f.size(f.col("matching_tokens")) > min_tokens) # Limiting the minimum required number of tokens to be identified to match.
-    
-    filtered_tokenized_df = filtered_tokenized_df.withColumn("token_match_count", f.size(f.col("matching_tokens")))
+    print("\nFiltering by the tokens!\n")
+
     filtered_tokenized_df = filtered_tokenized_df.orderBy(f.col("token_match_count").desc()) # Sort by descending order (So we can start with the highest number of matching tokens)
 
     filtered_tokenized_df = filtered_tokenized_df.limit(10) # Reducing to the top 10 results

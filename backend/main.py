@@ -20,10 +20,11 @@ def main():
         user_category = input("\nWhat category does it belong to?\n")
         
         item = com.queryMatchingItems(user_query, user_category)
-        # print(item)
+        print(item)
+        # user_choice = com.myinput(item) # Myinput will allow the user to select a product from this list of products and then the selection will be returned as a json object.
 
-        similar = com.identifyRelated(item[0])
-        print(similar)
+        # similar = com.identifyRelated(user_choice)
+        # com.myoutput(similar)
     
     return
 
