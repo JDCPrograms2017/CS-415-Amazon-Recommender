@@ -15,6 +15,15 @@ df = spark.read.format("mongodb").load()
 df = df.dropDuplicates(["Title"])
 df.show()
 
+def myoutput(similarItems):
+    #similarItems is the list of similar items
+    for i in similarItems:
+        print("Title: " + i['Title'])
+        print("Salesrank: " + i['salesrank'])
+        print("Reviews: " + i['reviews'])
+        print()
+    return
+
 def identifyRelated(line):
     #check if the current item is the item we are selecting to find similar items for
     
