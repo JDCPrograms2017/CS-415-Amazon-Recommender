@@ -64,8 +64,9 @@ def queryMatchingItems(query, category=None):
     print(cleansed_query)
 
     tokenized_df = df.withColumn("tokenized_title", f.split(f.lower(f.col("title")), "\\s+")) # Tokenizing the title of each product by whitespace and putting the result in a new column.
+    tokenized_df = tokenized_df.withColumn("tokenized_title", f.expr("transform(tokenized_title, x -> regexp_replace(x, '[^a-zA-Z0-9]', ''))"))
     # tokenized_df.select("tokenized_title").show(5, truncate=False)
-    # tokenized_df.limit(10).show()
+    tokenized_df.limit(10).show()
     
     # Count the number of tokens in the title that match the query tokens
     matching_tokens_column = f.array(*[f.when(f.array_contains(f.col("tokenized_title"), token), token) for token in cleansed_query])
@@ -85,6 +86,10 @@ def queryMatchingItems(query, category=None):
     print("\nFiltering by the tokens!\n")
 
     filtered_tokenized_df = filtered_tokenized_df.orderBy(f.col("token_match_count").desc()) # Sort by descending order (So we can start with the highest number of matching tokens)
+    
+    # We want to make sure that if a product group is specified, we filter based on the group too!
+    if (category):
+        filtered_tokenized_df = filtered_tokenized_df.filter(f.col("group") == category)
 
     filtered_tokenized_df = filtered_tokenized_df.limit(10) # Reducing to the top 10 results
 
