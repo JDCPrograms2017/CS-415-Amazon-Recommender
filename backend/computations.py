@@ -63,38 +63,44 @@ def queryMatchingItems(query, category=None):
     print("Cleansed query: ")
     print(cleansed_query)
 
-    tokenized_df = df.withColumn("tokenized_title", f.split(f.lower(f.col("title")), "\\s+"))
+    tokenized_df = df.withColumn("tokenized_title", f.split(f.lower(f.col("title")), "\\s+")) # Tokenizing the title of each product by whitespace and putting the result in a new column.
+    # tokenized_df.select("tokenized_title").show(5, truncate=False)
     # tokenized_df.limit(10).show()
 
-    conditions = f.lit(True)
-    for token in cleansed_query:
-        conditions = conditions & f.array_contains(f.col("tokenized_title"), token)
+    # Generating conditions by which to filter the dataframe of products.
+    # conditions = f.lit(False)
+    # for token in cleansed_query:
+    #     conditions = conditions | f.array_contains(f.col("tokenized_title"), token)
     
-    filtered_tokenized_df = tokenized_df.filter(conditions)
-
-    filtered_tokenized_df = filtered_tokenized_df.withColumn("tokenized_title", f.split(f.lower(f.col("title")), "\\s+"))
+    # filtered_tokenized_df = tokenized_df.filter(conditions)
+    # print("Conditions: ", conditions)
     # filtered_tokenized_df.limit(10).show()
     
     # Count the number of tokens in the title that match the query tokens
-    matching_tokens_column = f.array(*[f.when(f.array_contains(f.col("tokenized_title"), token), token).otherwise(None) for token in cleansed_query])
+    matching_tokens_column = f.array(*[f.when(f.array_contains(f.col("tokenized_title"), token), token) for token in cleansed_query])
+    tokenized_df = tokenized_df.withColumn("matching_tokens", matching_tokens_column)
+
+    # Filter out the NULL values in the lists.
+    tokenized_df = tokenized_df.withColumn("matching_tokens", f.expr("filter(matching_tokens, x -> x IS NOT NULL)"))
     
     # Add a column for the count of matching tokens
-    filtered_tokenized_df = filtered_tokenized_df.withColumn("matching_tokens", matching_tokens_column)
-    filtered_tokenized_df = filtered_tokenized_df.withColumn("token_match_count", f.size(f.col("matching_tokens")))
+    tokenized_df = tokenized_df.withColumn("token_match_count", f.size(f.col("matching_tokens")))
 
-    # filtered_tokenized_df.limit(10).show()
+    # tokenized_df.limit(10).show()
     
     # Applying a new column with the matching tokens
-    min_tokens = (lambda x, y: x if x < y else y)(3, len(cleansed_query)) # Identifying the minimum number of tokens needed to match with a product.
-    filtered_tokenized_df = filtered_tokenized_df.filter(f.size(f.col("matching_tokens")) > min_tokens) # Limiting the minimum required number of tokens to be identified to match.
+    min_tokens = (lambda x, y: x if x < y else y)(2, len(cleansed_query)) # Identifying the minimum number of tokens needed to match with a product.
+    filtered_tokenized_df = tokenized_df.filter(f.col("token_match_count") >= min_tokens) # Limiting the minimum required number of tokens to be identified to match.
     print("\nFiltering by the tokens!\n")
 
     filtered_tokenized_df = filtered_tokenized_df.orderBy(f.col("token_match_count").desc()) # Sort by descending order (So we can start with the highest number of matching tokens)
 
     filtered_tokenized_df = filtered_tokenized_df.limit(10) # Reducing to the top 10 results
+
+    filter_collect = filtered_tokenized_df.select(f.col("ASIN")).collect()
     
     # We are going to take the matching products and return their JSON representations to be displayed to the webpage.
-    resulting_ASINs = [row['ASIN'] for row in filtered_tokenized_df.select('ASIN').collect()] # Creating a list of ASINs for the matching products.
+    resulting_ASINs = [row['ASIN'] for row in filter_collect] # Creating a list of ASINs for the matching products.
     return fetch_products(resulting_ASINs)
 
 # Helper function to fetch the full product(s) and their information and return the info as JSON data.
