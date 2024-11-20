@@ -66,15 +66,6 @@ def queryMatchingItems(query, category=None):
     tokenized_df = df.withColumn("tokenized_title", f.split(f.lower(f.col("title")), "\\s+")) # Tokenizing the title of each product by whitespace and putting the result in a new column.
     # tokenized_df.select("tokenized_title").show(5, truncate=False)
     # tokenized_df.limit(10).show()
-
-    # Generating conditions by which to filter the dataframe of products.
-    # conditions = f.lit(False)
-    # for token in cleansed_query:
-    #     conditions = conditions | f.array_contains(f.col("tokenized_title"), token)
-    
-    # filtered_tokenized_df = tokenized_df.filter(conditions)
-    # print("Conditions: ", conditions)
-    # filtered_tokenized_df.limit(10).show()
     
     # Count the number of tokens in the title that match the query tokens
     matching_tokens_column = f.array(*[f.when(f.array_contains(f.col("tokenized_title"), token), token) for token in cleansed_query])
