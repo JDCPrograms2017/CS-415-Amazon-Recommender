@@ -19,12 +19,12 @@ def main():
         user_query = input("What item are you looking for?\n")
         user_category = input("\nWhat category does it belong to?\n")
         
-        item = com.queryMatchingItems(user_query, user_category)
-        print(item)
-        # user_choice = com.myinput(item) # Myinput will allow the user to select a product from this list of products and then the selection will be returned as a json object.
+        item = com.queryMatchingItems(user_query, user_category) # Fetches a JSON object that contains the resulting products from the query.
+        # print(item)
+        user_choice = com.myinput(item) # Myinput will allow the user to select a product from this list of products and then the selection will be returned as an integer index.
 
-        # similar = com.identifyRelated(user_choice)
-        # com.myoutput(similar)
+        similar = com.identifyRelated(item[int(user_choice) - 1]) # Fetches the JSON object (dictionary) of the product we select and sends it to identifyRelated to get the matching items.)
+        com.myoutput(similar)
     
     return
 

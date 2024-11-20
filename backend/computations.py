@@ -18,8 +18,8 @@ def myinput(searchQuery):
     while (1):
         #output the data
         j = 1
-        for line in searchQuery:
-            print(line)
+        for doc in searchQuery:
+            print(j, ". ", doc["title"]) # Get the title of the found item and print it!
             j += 1
 
         #ask user for what they selected
@@ -30,15 +30,15 @@ def myinput(searchQuery):
         if int(selection) > count or int(selection) < 1:
             print("Error in selection. Please enter another number\n")
             continue
-        #get that input and put the data into a storage
-        return fetch_products(searchQuery[selection - 1])
+        
+        return int(selection) # Returns the user's selection from the JSON collection.
 
 def myoutput(similarItems):
     #similarItems is the list of similar items
     for i in similarItems:
-        print("Title: " + i['Title'])
-        print("Salesrank: " + i['salesrank'])
-        print("Reviews: " + i['reviews'])
+        print("Title: ", i['title'])
+        print("Salesrank: ", i['salesrank'])
+        print("Reviews: ", i['reviews'])
         print()
     return
 
@@ -46,15 +46,15 @@ def identifyRelated(item_json):
 
     # Grab the ASINs of the provided product.
     similar_items = item_json["similar"]
-    similar_items = similar_items.split(" ")
+    similar_items = similar_items.split()
     limit = int(similar_items[0]) # The first element in this list will be the number of similar items.
 
     if limit > 5:
       limit = 5
     
-    product_asins = similar_items[1:limit] # Removes the integer indicator and limits the number of related products to 5
+    product_asins = similar_items[1:limit+1] # Removes the integer indicator and limits the number of related products to 5
 
-    # return the list
+    # Returns a JSON object (dictionary) of the resulting matching items.
     return fetch_products(product_asins)
 
 def queryMatchingItems(query, category=None):
@@ -66,7 +66,7 @@ def queryMatchingItems(query, category=None):
     tokenized_df = df.withColumn("tokenized_title", f.split(f.lower(f.col("title")), "\\s+")) # Tokenizing the title of each product by whitespace and putting the result in a new column.
     tokenized_df = tokenized_df.withColumn("tokenized_title", f.expr("transform(tokenized_title, x -> regexp_replace(x, '[^a-zA-Z0-9]', ''))"))
     # tokenized_df.select("tokenized_title").show(5, truncate=False)
-    tokenized_df.limit(10).show()
+    # tokenized_df.limit(10).show()
     
     # Count the number of tokens in the title that match the query tokens
     matching_tokens_column = f.array(*[f.when(f.array_contains(f.col("tokenized_title"), token), token) for token in cleansed_query])
@@ -108,6 +108,5 @@ def fetch_products(product_identifiers):
 
     # Converting the results to json data
     json_results = [row.asDict() for row in resulting_rows] # When we make rows into dictionaries, we can easily convert those dictionaries into JSON data.
-    json_final_dump = json.dumps(json_results, indent=4)
 
-    return json_final_dump # Return the resulting json data
+    return json_results # Return the resulting json data
