@@ -2,8 +2,9 @@
 # and setus up a /search endpoint that takes query and category into a POST request, searches the db and 
 # returns matching products
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from pymongo import MongoClient
+#import computations as com
 
 app=Flask(__name__)
 client=MongoClient('mongodb://localhost:27017')
@@ -12,20 +13,50 @@ products_collection=db['Products']
 
 @app.route('/')
 def home():
-    return "Hello, Flask!"
+    return render_template("search.html")
 
 
+# @app.route('/search', methods=['POST'])
+# def search():
+#     data=request.json
+#     query=data.get('query','')
+#     category=data('group','')
+#     search_filter={'title': {'$regex':query, '$options': 'i'}}
+#     if category:
+#         search_filter['group']={'$regex': category, '$options':'i'}
+    
+#     results=list(products_collection.find(search_filter,{'_id':0}))
+#     return jsonify(results)
+item = []
 @app.route('/search', methods=['POST'])
 def search():
-    data=request.json
-    query=data.get('query','')
-    category=data('group','')
-    search_filter={'title': {'$regex':query, '$options': 'i'}}
-    if category:
-        search_filter['group']={'$regex': category, '$options':'i'}
-    
-    results=list(products_collection.find(search_filter,{'_id':0}))
-    return jsonify(results)
+    if request.method == 'POST':
+        search = request.form['search']
+        user_category = request.form['category']
+        item = ['something']
+        #item = com.queryMatchingItems(search, user_category) # Fetches a JSON object that contains the resulting products from the query.
+        return render_template("selection.html", html_data=item)
+        
+    return render_template("search.html")
+
+@app.route('/selection', methods=['POST'])
+def select():
+    if request.method == 'POST':
+        #output the data
+
+        #get selected item
+        search = request.form['choice']
+        #search should be a number
+
+        #similar = com.identifyRelated(item[int(search) - 1])
+        similar = ['something']
+        return render_template("display.html", html_data=similar)
+    return render_template("selection.html", html_data=item)
+
+@app.route('/display', methods=['POST'])
+def output():
+    return render_template("search.html")
 
 if __name__== '__main__':
     app.run(debug=True)
+
