@@ -3,21 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search</title>
+    <title>Select</title>
 </head>
 <body>
     <div>
-        <h1>Search</h1>
-        <p1>{{html_data}}</p1>
-        <!-- <script>
-            for (let i = 1; i <= html_data.length; i++)
-            {
-                console.log(html_data[i])
-            };
-        </script> -->
+        <h1>Select</h1>       
+        <div>
+            {{ html_data | safe}}
+        </div>
         <form method="POST" action="/selection">
             <label for="Choice">What would you like to select?:</label>
-            <input type="number" id="choice" name="choice"><br><br>
+            <input type="number" min="1" max={{max}} id="choice" name="choice"><br><br>
             <input type="submit" value="Submit">
         </form>
     </div>
