@@ -2,8 +2,12 @@
 # and setus up a /search endpoint that takes query and category into a POST request, searches the db and 
 # returns matching products
 
+#make sure to do pip install json2html
+
 from flask import Flask, request, jsonify, render_template
 from pymongo import MongoClient
+import json
+from json2html import *
 #import computations as com
 
 app=Flask(__name__)
@@ -33,9 +37,16 @@ def search():
     if request.method == 'POST':
         search = request.form['search']
         user_category = request.form['category']
-        item = ['something']
+        item = [{'title' : 'something'}, {'title': 'num2'}] #sample data
         #item = com.queryMatchingItems(search, user_category) # Fetches a JSON object that contains the resulting products from the query.
-        return render_template("selection.html", html_data=item)
+        #used this link https://pypi.org/project/json2html/
+        j = 1
+        for i in item:
+            i['number'] = j
+            j += 1
+        j -= 1
+        html = json2html.convert(json = item)
+        return render_template("selection.html", html_data=html, max=j)
         
     return render_template("search.html")
 
@@ -49,8 +60,10 @@ def select():
         #search should be a number
 
         #similar = com.identifyRelated(item[int(search) - 1])
-        similar = ['something']
-        return render_template("display.html", html_data=similar)
+        similar = [{'title' : 'something'}] #sample data
+
+        html = json2html.convert(json = similar)
+        return render_template("display.html", html_data=html)
     return render_template("selection.html", html_data=item)
 
 @app.route('/display', methods=['POST'])
@@ -59,4 +72,3 @@ def output():
 
 if __name__== '__main__':
     app.run(debug=True)
-
