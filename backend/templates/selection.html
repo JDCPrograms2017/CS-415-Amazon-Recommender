@@ -13,7 +13,7 @@
             <div id="results">
                 {% for result in products %}
                 <div class="product-card">
-                    <h2>{{ result.title }}</h2>
+                    <h2>{{result.number}}. {{ result.title }}</h2>
                     <p><strong>Group:</strong> {{ result.group }}</p>
                 </div>
                 {% endfor %}
