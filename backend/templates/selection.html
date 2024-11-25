@@ -4,12 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Select</title>
+    <link rel="stylesheet", href="../static/css/styling.css">
 </head>
 <body>
     <div>
         <h1>Select</h1>       
         <div>
-            {{ html_data | safe}}
+            <div id="results">
+                {% for result in products %}
+                <div class="product-card">
+                    <h2>{{ result.title }}</h2>
+                    <p><strong>Group:</strong> {{ result.group }}</p>
+                </div>
+                {% endfor %}
+            </div>
         </div>
         <form method="POST" action="/selection">
             <label for="Choice">What would you like to select?:</label>

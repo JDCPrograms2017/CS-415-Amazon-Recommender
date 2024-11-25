@@ -31,7 +31,7 @@ def home():
     
 #     results=list(products_collection.find(search_filter,{'_id':0}))
 #     return jsonify(results)
-item = []
+items = []
 @app.route('/search', methods=['POST'])
 def search():
     if request.method == 'POST':
@@ -39,17 +39,17 @@ def search():
         user_category = request.form['category']
 
         # item = [{'title' : 'something'}, {'title': 'num2'}] #sample data
-        global item # Referencing the global item variable to persist the query result across API calls.
-        item = com.queryMatchingItems(search, user_category) # Fetches a JSON object that contains the resulting products from the query.
+        global items # Referencing the global item variable to persist the query result across API calls.
+        items = com.queryMatchingItems(search, user_category) # Fetches a JSON object that contains the resulting products from the query.
         
         #used this link https://pypi.org/project/json2html/
         j = 1
-        for i in item:
+        for i in items:
             i['number'] = j
             j += 1
         j -= 1
-        html = json2html.convert(json = item)
-        return render_template("selection.html", html_data=html, max=j)
+        # html = json2html.convert(json = item)
+        return render_template("selection.html", products=items, max=j)
         
     return render_template("search.html")
 
@@ -64,12 +64,12 @@ def select():
         # print("User choice: ", search)
         # search should be an integer (in a string type)
 
-        similar = com.identifyRelated(item[int(search) - 1])
+        similar = com.identifyRelated(items[int(search) - 1])
         # similar = [{'title' : 'something'}] #sample data
 
-        html = json2html.convert(json = similar)
-        return render_template("display.html", html_data=html)
-    return render_template("selection.html", html_data=item)
+        # html = json2html.convert(json = similar)
+        return render_template("display.html", products=similar)
+    return render_template("selection.html", products=similar)
 
 @app.route('/display', methods=['POST'])
 def output():

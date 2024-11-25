@@ -4,13 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Display</title>
+    <link rel="stylesheet", href="../static/css/styling.css"> <!--This is a local link. Caution!-->
 </head>
 <body>
     <div>
         <h1>Display</h1>
         <p1>Items related to your selected item are:</p1>
-        <div>
-            {{ html_data | safe}}
+        <div id="results-grid">
+            {% for result in products %}
+            <div class="product-card">
+                <h2>{{ result.title }}</h2>
+                <p><strong>Group:</strong> {{ result.group }}</p>
+            </div>
+            {% endfor %}
         </div>
         <form method="POST" action="/display">
             <input type="submit" value="Return to Search">
