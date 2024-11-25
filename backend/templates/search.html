@@ -9,25 +9,24 @@
 <body>
     <div>
         <h1>WSU Big Data Analysis Product Search</h1>
-        <form method="POST" action="/search">
-            <label for="Search">Search:</label>
-            <input type="text" id="search" name="search"><br><br>
-            <label for "category">Select Category</label>
-            <select id="category" name="category">
-                <option value="Baby Product">Baby Product</option>
-                <option value="Book">Book</option>
-                <option value="CE">CE</option>
-                <option value="DVD">DVD</option>
-                <option value="Music">Music</option>
-                <option value="Software">Software</option>
-                <option value="Sports">Sports</option>
-                <option value="Toy">Toy</option>
-                <option value="Video">Video</option>
-                <option value="Video Games">Video Games</option>
-            </select>
-            <input type="submit" value="Submit">
-        </form>
+        <label for="Search">Search:</label>
+        <input type="text" id="searchBox" name="search"><br><br>
+        <label for "category">Select Category</label>
+        <select id="category" name="category">
+            <option value="Baby Product">Baby Product</option>
+            <option value="Book">Book</option>
+            <option value="CE">CE</option>
+            <option value="DVD">DVD</option>
+            <option value="Music">Music</option>
+            <option value="Software">Software</option>
+            <option value="Sports">Sports</option>
+            <option value="Toy">Toy</option>
+            <option value="Video">Video</option>
+            <option value="Video Games">Video Games</option>
+        </select>
+        <button id="submitQuery" onclick="fetchQueryResults()">Search</button>
+        <div id="search-results"></div>
     </div>
-    
+    <script src="../static/js/functions.js"></script>
 </body>
 </html>

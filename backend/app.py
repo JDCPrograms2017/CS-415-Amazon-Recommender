@@ -35,8 +35,11 @@ items = []
 @app.route('/search', methods=['POST'])
 def search():
     if request.method == 'POST':
-        search = request.form['search']
-        user_category = request.form['category']
+        # search = request.form['search']
+        # user_category = request.form['category']
+        clientReq = request.get_json()
+        search = clientReq.get('query')
+        user_category = clientReq.get('category')
 
         # item = [{'title' : 'something'}, {'title': 'num2'}] #sample data
         global items # Referencing the global item variable to persist the query result across API calls.
@@ -52,7 +55,9 @@ def search():
             j += 1
         j -= 1
         # html = json2html.convert(json = item)
-        return render_template("selection.html", products=items, max=j)
+        # return render_template("selection.html", products=items, max=j)
+        print(jsonify(items))
+        return jsonify(items)
         
     return render_template("search.html")
 
