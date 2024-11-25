@@ -46,6 +46,9 @@ def search():
         j = 1
         for i in items:
             i['number'] = j
+            rev = i['reviews'][0].split(":")
+            new = rev[3]
+            i['avg'] = new
             j += 1
         j -= 1
         # html = json2html.convert(json = item)
@@ -68,6 +71,10 @@ def select():
         # similar = [{'title' : 'something'}] #sample data
 
         # html = json2html.convert(json = similar)
+        for i in items:
+            rev = i['reviews'][0].split(":")
+            new = rev[3]
+            i['avg'] = new
         return render_template("display.html", products=similar)
     return render_template("selection.html", products=similar)
 
