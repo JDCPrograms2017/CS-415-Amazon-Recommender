@@ -51,7 +51,19 @@ async function fetchQueryResults() {
                     <p>Average Rating: ${avgReviews}</p>
                 `;
 
-                resultsDiv.appendChild(productCard) // Add the product card to the results-grid container.
+                const addToCartBtn = document.createElement('button');
+                addToCartBtn.className = 'add-to-cart-btn';
+                addToCartBtn.textContent = 'Add to Cart';
+
+                // Event listener to pass in the whole JSON data for the specified object.
+                addToCartBtn.addEventListener('click', () => {
+                    loadRelatedProducts(JSON.stringify(product));
+                });
+
+                // Append the button to the product card.
+                productCard.appendChild(addToCartBtn);
+
+                resultsDiv.appendChild(productCard) // Add the product card to the product results container.
             });
         } else {
             resultsDiv.innerHTML = '<h3>No results found...</h3>';
@@ -59,5 +71,29 @@ async function fetchQueryResults() {
     } catch (error) {
         console.error('There was an issue fetching the user\'s request:', error);
         alert('Invalid input! Please try again.');
+    }
+}
+
+async function loadRelatedProducts(productJSON) {
+    try {
+        const apiResponse = await fetch('/selection', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: productJSON,
+        });
+
+        if (!apiResponse.ok) {
+            throw new Error('Failed to send information.');
+        }
+
+        const responseData = await apiResponse.json();
+        const redirectURL = responseData['redirect-url'];
+        window.location.href = redirectURL;
+        console.log('Response: ', redirectURL);
+    } catch (error) {
+        console.error('There was an issue sending the JSON data:', error);
+        alert('There was an issue adding this item to the cart. Please try again later.');
     }
 }

@@ -46,6 +46,7 @@ def identifyRelated(item_json):
 
     # Grab the ASINs of the provided product.
     similar_items = item_json["similar"]
+    print(similar_items)
     similar_items = similar_items.split()
     limit = int(similar_items[0]) # The first element in this list will be the number of similar items.
 

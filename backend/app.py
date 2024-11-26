@@ -4,13 +4,14 @@
 
 #make sure to do pip install json2html
 
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, session, url_for
 from pymongo import MongoClient
 import json
 from json2html import *
 import computations as com
 
 app=Flask(__name__)
+app.secret_key = '12verys3cret'
 client=MongoClient('mongodb://localhost:27017')
 db=client['BigDataProject']
 products_collection=db['Products']
@@ -46,17 +47,16 @@ def search():
         items = com.queryMatchingItems(search, user_category) # Fetches a JSON object that contains the resulting products from the query.
         
         #used this link https://pypi.org/project/json2html/
-        j = 1
-        for i in items:
-            i['number'] = j
-            rev = i['reviews'][0].split(":")
-            new = rev[3]
-            i['avg'] = new
-            j += 1
-        j -= 1
+        # j = 1
+        # for i in items:
+        #     i['number'] = j
+        #     rev = i['reviews'][0].split(":")
+        #     new = rev[3]
+        #     i['avg'] = new
+        #     j += 1
+        # j -= 1
         # html = json2html.convert(json = item)
         # return render_template("selection.html", products=items, max=j)
-        print(jsonify(items))
         return jsonify(items)
         
     return render_template("search.html")
@@ -67,21 +67,25 @@ def select():
         #output the data
 
         #get selected item
-        search = request.form['choice']
-        # print(item)
-        # print("User choice: ", search)
-        # search should be an integer (in a string type)
+        # search = request.form['choice']
+        itemData = request.get_json()
 
-        similar = com.identifyRelated(items[int(search) - 1])
-        # similar = [{'title' : 'something'}] #sample data
+        similar = com.identifyRelated(itemData)
+        #similar = com.identifyRelated(items[int(search) - 1])
 
-        # html = json2html.convert(json = similar)
-        for i in items:
-            rev = i['reviews'][0].split(":")
-            new = rev[3]
-            i['avg'] = new
-        return render_template("display.html", products=similar)
+        # Storing the similar products in the cookies to be rendered after redirect.
+        session['related-products'] = similar
+        redirect_url = url_for('related_products_page')
+        
+        # print(f'URL being sent: {redirect_url}')
+        return jsonify({'redirect-url': redirect_url})
     return render_template("selection.html", products=similar)
+
+@app.route('/display-related-products', methods=['GET'])
+def related_products_page():
+    if request.method == 'GET':
+        related_products = session.get('related-products')
+        return render_template('display.html', products=related_products)
 
 @app.route('/display', methods=['POST'])
 def output():
