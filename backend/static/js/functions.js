@@ -29,7 +29,7 @@ async function fetchQueryResults() {
         resultsDiv.innerHTML = ''; // Empty the div first.
 
         // Make sure that there are results to read and then parse them.
-        if (responseData) {
+        if (Object.keys(responseData).length !== 0 && responseData.constructor !== Object) {
             responseData.forEach((product) => {
                 // Create a new div for the product
                 const productCard = document.createElement('div')

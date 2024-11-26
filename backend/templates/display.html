@@ -9,16 +9,17 @@
 <body>
     <div>
         <h1>Recommended Additional Purchases</h1>
-        <p1>Items related to your selected item are:</p1>
+        <p1>Here are some items related to what you just added to your shopping cart:</p1>
         <div id="results-grid">
             {% for result in products %}
             <div class="product-card">
                 <h2>{{ result.title }}</h2>
                 <p><strong>Group:</strong> {{ result.group }}</p>
-                <p><strong>Average Rating:</strong> {{ result.avg }}</p>
+                <button class="add-to-cart-btn" onclick="loadRelatedProducts('{{result}}')">Add to Cart</button>
             </div>
             {% endfor %}
         </div>
+        <script src="../static/js/functions.js"></script>
         <form method="POST" action="/display">
             <input type="submit" value="Return to Search">
         </form>
