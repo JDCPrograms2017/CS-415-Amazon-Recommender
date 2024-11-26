@@ -20,18 +20,6 @@ products_collection=db['Products']
 def home():
     return render_template("search.html")
 
-
-# @app.route('/search', methods=['POST'])
-# def search():
-#     data=request.json
-#     query=data.get('query','')
-#     category=data('group','')
-#     search_filter={'title': {'$regex':query, '$options': 'i'}}
-#     if category:
-#         search_filter['group']={'$regex': category, '$options':'i'}
-    
-#     results=list(products_collection.find(search_filter,{'_id':0}))
-#     return jsonify(results)
 items = []
 @app.route('/search', methods=['POST'])
 def search():
@@ -46,17 +34,6 @@ def search():
         global items # Referencing the global item variable to persist the query result across API calls.
         items = com.queryMatchingItems(search, user_category) # Fetches a JSON object that contains the resulting products from the query.
         
-        #used this link https://pypi.org/project/json2html/
-        # j = 1
-        # for i in items:
-        #     i['number'] = j
-        #     rev = i['reviews'][0].split(":")
-        #     new = rev[3]
-        #     i['avg'] = new
-        #     j += 1
-        # j -= 1
-        # html = json2html.convert(json = item)
-        # return render_template("selection.html", products=items, max=j)
         return jsonify(items)
         
     return render_template("search.html")
